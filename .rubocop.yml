@@ -1,0 +1,20 @@
+
+AllCops:
+  NewCops: enable
+  Exclude:
+    - '**/spec/**/*'
+
+Layout/ClassStructure:
+  Enabled: true
+
+Gemspec/DependencyVersion:
+  Enabled: true
+
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+Metrics/MethodLength:
+  Max: 20
