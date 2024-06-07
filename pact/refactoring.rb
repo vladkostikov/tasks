@@ -1,15 +1,3 @@
-# User object in database
-# name string
-# surname string
-# patronymic string
-# fullname string
-# email string
-# age integer
-# nationality string
-# country string
-# interests array
-# gender string
-# skills string
 class User < ApplicationRecord
   has_many :user_interests, dependent: :destroy
   has_many :interests, through: :user_interests
@@ -18,23 +6,16 @@ class User < ApplicationRecord
   has_many :skills, through: :user_skills
 end
 
-# Interest object in database
-# name string
 class Interest < ApplicationRecord
   has_many :interest_users, class_name: 'UserInterest', dependent: :destroy
   has_many :users, through: :interest_users
 end
 
-# Skil object in database
-# name string
 class Skil < ApplicationRecord
   has_many :skill_users, class_name: 'UserSkill', foreign_key: :skil_id, dependent: :destroy
   has_many :users, through: :skill_users
 end
 
-# UserInterest object in database
-# user_id bigint
-# interest_id bigint
 class UserInterest < ApplicationRecord
   belongs_to :user
   belongs_to :interest
@@ -42,9 +23,6 @@ class UserInterest < ApplicationRecord
   validates_uniqueness_of :user_id, scope: :interest_id
 end
 
-# UserSkill object in database
-# user_id bigint
-# skil_id bigint
 class UserSkill < ApplicationRecord
   belongs_to :user
   belongs_to :skill, class_name: 'Skil'
@@ -105,3 +83,30 @@ class Users::Create < ActiveInteraction::Base
     user.skills = skills
   end
 end
+
+# User object in database
+# name string
+# surname string
+# patronymic string
+# fullname string
+# email string
+# age integer
+# nationality string
+# country string
+# interests array
+# gender string
+# skills string
+
+# Interest object in database
+# name string
+
+# Skil object in database
+# name string
+
+# UserInterest object in database
+# user_id bigint
+# interest_id bigint
+
+# UserSkill object in database
+# user_id bigint
+# skil_id bigint
