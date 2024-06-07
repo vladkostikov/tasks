@@ -33,6 +33,8 @@ class Users::Create < ActiveInteraction::Base
     string :name, :patronymic, :email, :nationality, :country, :gender
     string :surname, default: nil
     integer :age
+    array :interests, default: nil
+    string :skills, default: nil
   end
 
   validates :name, :patronymic, :email, :nationality, :country, :gender, :age, presence: true
