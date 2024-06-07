@@ -45,17 +45,13 @@ class Users::Create < ActiveInteraction::Base
     user_params = params.except(:interests, :skills, :user_full_name).merge(user_full_name)
     user = User.create(user_params)
 
-    Interest.where(name: params['interests']).each do |interest|
-      user.interests = user.interest + interest
-      user.save!
-    end
+    interests = Interest.where(name: params['interests'])
+    user.interests = interests
 
-    user_skills = []
-    params['skills'].split(',').each do |skil|
-      skil = Skil.find(name: skil)
-      user_skills += [skil]
-    end
-    user.skills = user_skills
+    skill_names = params['skills'].split(',').map(&:strip)
+    skills = Skil.where(name: skill_names)
+    user.skills = skills
+
     user.save
   end
 end
