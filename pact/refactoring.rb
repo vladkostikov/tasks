@@ -40,7 +40,7 @@ class Users::Create < ActiveInteraction::Base
   validates :name, :patronymic, :email, :nationality, :country, :gender, :age, presence: true
   validates :age, numericality: { greater_than: 0, less_than_or_equal_to: 90 }
   validates :gender, inclusion: { in: %w[male female] }
-  validates :email, uniqueness: true
+  validate :email_uniqueness
 
   def execute
     user_full_name = "#{params['surname']} #{params['name']} #{params['patronymic']}"
@@ -55,5 +55,11 @@ class Users::Create < ActiveInteraction::Base
     user.skills = skills
 
     user.save
+  end
+
+  private
+
+  def email_uniqueness
+    errors.add_sym(:email, :not_unique) if User.exists?(email: email)
   end
 end
