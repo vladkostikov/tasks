@@ -43,15 +43,10 @@ class Users::Create < ActiveInteraction::Base
   validate :email_uniqueness
 
   def execute
-    user_params = params.except(:interests, :skills, :fullname).merge(fullname: user_full_name)
     user = User.create(user_params)
 
-    interests = Interest.where(name: params['interests'])
-    user.interests = interests
-
-    skill_names = params['skills'].split(',').map(&:strip)
-    skills = Skil.where(name: skill_names)
-    user.skills = skills
+    assign_interests(user)
+    assign_skills(user)
 
     user.save
   end
@@ -62,7 +57,26 @@ class Users::Create < ActiveInteraction::Base
     errors.add_sym(:email, :not_unique) if User.exists?(email: email)
   end
 
+  def user_params
+    params.except(:interests, :skills, :fullname).merge(fullname: user_full_name)
+  end
+
   def user_full_name
     "#{params['surname']} #{params['name']} #{params['patronymic']}"
+  end
+
+  def assign_interests(user)
+    return if params['interests'].blank?
+
+    interests = Interest.where(name: params['interests'])
+    user.interests = interests
+  end
+
+  def assign_skills(user)
+    return if params['skills'].blank?
+
+    skill_names = params['skills'].split(',').map(&:strip)
+    skills = Skil.where(name: skill_names)
+    user.skills = skills
   end
 end
