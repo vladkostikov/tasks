@@ -29,20 +29,18 @@ end
 
 # In application we are using ActiveInteraction gem => https://github.com/AaronLasseigne/active_interaction
 class Users::Create < ActiveInteraction::Base
-  def execute
-    #don't do anything if params is empty
-    return unless params['name']
-    return unless params['patronymic']
-    return unless params['email']
-    return unless params['age']
-    return unless params['nationality']
-    return unless params['country']
-    return unless params['gender']
-    ##########
-    return if User.where(email: params['email'])
-    return if params['age'] <= 0 || params['age'] > 90
-    return if params['gender'] != 'male' || params['gender'] != 'female'
+  hash :params do
+    string :name, :patronymic, :email, :nationality, :country, :gender
+    string :surname, default: nil
+    integer :age
+  end
 
+  validates :name, :patronymic, :email, :nationality, :country, :gender, :age, presence: true
+  validates :age, numericality: { greater_than: 0, less_than_or_equal_to: 90 }
+  validates :gender, inclusion: { in: %w[male female] }
+  validates :email, uniqueness: true
+
+  def execute
     user_full_name = "#{params['surname']} #{params['name']} #{params['patronymic']}"
     user_params = params.except(:interests)
     user = User.create(user_params.merge(user_full_name))
