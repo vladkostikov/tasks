@@ -42,8 +42,8 @@ class Users::Create < ActiveInteraction::Base
 
   def execute
     user_full_name = "#{params['surname']} #{params['name']} #{params['patronymic']}"
-    user_params = params.except(:interests)
-    user = User.create(user_params.merge(user_full_name))
+    user_params = params.except(:interests, :skills, :user_full_name).merge(user_full_name)
+    user = User.create(user_params)
 
     Interest.where(name: params['interests']).each do |interest|
       user.interests = user.interest + interest
