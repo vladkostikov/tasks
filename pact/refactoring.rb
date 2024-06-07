@@ -1,68 +1,107 @@
+# User object in database
+# name string
+# surname string
+# patronymic string
+# fullname string
+# email string
+# age integer
+# nationality string
+# country string
+# interests array
+# gender string
+# skills string
 class User < ApplicationRecord
-  has_many :interests
-  has_many :skills, class_name: 'Skil'
+  has_many :user_interests, dependent: :destroy
+  has_many :interests, through: :user_interests
+
+  has_many :user_skills, dependent: :destroy
+  has_many :skills, through: :user_skills
 end
 
+# Interest object in database
+# name string
 class Interest < ApplicationRecord
-  has_many :users
+  has_many :interest_users, class_name: 'UserInterest', dependent: :destroy
+  has_many :users, through: :interest_users
 end
 
+# Skil object in database
+# name string
 class Skil < ApplicationRecord
-  has_many :users
+  has_many :skill_users, class_name: 'UserSkill', foreign_key: :skil_id, dependent: :destroy
+  has_many :users, through: :skill_users
 end
 
-#In appliaction we are using ActiveInteraction gem => https://github.com/AaronLasseigne/active_interaction
+# UserInterest object in database
+# user_id bigint
+# interest_id bigint
+class UserInterest < ApplicationRecord
+  belongs_to :user
+  belongs_to :interest
+
+  validates_uniqueness_of :user_id, scope: :interest_id
+end
+
+# UserSkill object in database
+# user_id bigint
+# skil_id bigint
+class UserSkill < ApplicationRecord
+  belongs_to :user
+  belongs_to :skill, class_name: 'Skil'
+
+  validates_uniqueness_of :user_id, scope: :skil_id
+end
+
+# In application we are using ActiveInteraction gem => https://github.com/AaronLasseigne/active_interaction
 class Users::Create < ActiveInteraction::Base
-  hash :params
+  hash :params do
+    string :name, :patronymic, :email, :nationality, :country, :gender
+    string :surname, default: nil
+    integer :age
+    array :interests, default: nil
+    string :skills, default: nil
+  end
+
+  validates :name, :patronymic, :email, :nationality, :country, :gender, :age, presence: true
+  validates :age, numericality: { greater_than: 0, less_than_or_equal_to: 90 }
+  validates :gender, inclusion: { in: %w[male female] }
+  validate :email_uniqueness
 
   def execute
-    #don't do anything if params is empty
-    return unless params['name']
-    return unless params['patronymic']
-    return unless params['email']
-    return unless params['age']
-    return unless params['nationality']
-    return unless params['country']
-    return unless params['gender']
-    ##########
-    return if User.where(email: params['email'])
-    return if params['age'] <= 0 || params['age'] > 90
-    return if params['gender'] != 'male' or params['gender'] != female
+    user = User.create(user_params)
 
-    user_full_name = "#{params['surname']} #{params['name']} #{params['patronymic']}"
-    user_params = params.except(:interests)
-    user = User.create(user_params.merge(user_full_name))
+    assign_interests(user)
+    assign_skills(user)
 
-    Intereset.where(name: params['interests']).each do |interest|
-      user.interests = user.interest + interest
-      user.save!
-    end
-
-    user_skills = []
-    params['skills'].split(',').each do |skil|
-      skil = Skil.find(name: skil)
-      user_skills =  user_skills + [skil]
-    end
-    user.skills = user_skills
     user.save
   end
+
+  private
+
+  def email_uniqueness
+    errors.add_sym(:email, :not_unique) if User.exists?(email: email)
+  end
+
+  def user_params
+    params.except(:interests, :skills, :fullname).merge(fullname: user_full_name)
+  end
+
+  def user_full_name
+    "#{params['surname']} #{params['name']} #{params['patronymic']}"
+  end
+
+  def assign_interests(user)
+    return if params['interests'].blank?
+
+    interests = Interest.where(name: params['interests'])
+    user.interests = interests
+  end
+
+  def assign_skills(user)
+    return if params['skills'].blank?
+
+    skill_names = params['skills'].split(',').map(&:strip)
+    skills = Skil.where(name: skill_names)
+    user.skills = skills
+  end
 end
-
-
-#User object in database
-name string
-surname string
-patronymic string
-fullname string
-email string
-age integer
-nationality string
-country string
-interests array
-gender string
-skills string
-
-#Interest object in database
-name string
-#Skil oject in database
-name string
